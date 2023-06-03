@@ -1,5 +1,5 @@
 [package]
-name = "mqtt-v1"
+name = "mqtt-sync-subscriber"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,6 +7,5 @@ edition = "2021"
 
 [dependencies]
 dotenv = "0.15.0"
-mqtt-sync-publisher = { path = "./mqtt-sync-publisher" }
-mqtt-sync-subscriber = { path = "./mqtt-sync-subscriber" }
 paho-mqtt = "0.12"
+thiserror = "1.0.40"
