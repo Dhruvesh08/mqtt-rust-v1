@@ -1,4 +1,4 @@
-use mqtt_sync_publisher::publisher::MqttClient;
+use mqtt_sync_publisher::MqttClient;
 
 fn main() {
     let broker_url = "mqtt://broker.emqx.io:1883";
