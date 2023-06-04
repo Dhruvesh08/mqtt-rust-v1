@@ -11,5 +11,7 @@ tokio = { version = "1.28.2", features = ["full"] }
 mqtt-sync-publisher = { path = "./mqtt-sync-publisher" }
 mqtt-sync-subscriber = { path = "./mqtt-sync-subscriber" }
 mqtt-async-subscriber = { path = "./mqtt-async-subscriber" }
+mqtt-async-publisher = { path = "./mqtt-async-publisher" }
 paho-mqtt = "0.12"
 futures-util = "0.3.28"
+futures = "0.3.28"

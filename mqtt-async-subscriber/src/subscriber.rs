@@ -2,9 +2,6 @@ use futures_util::StreamExt;
 use paho_mqtt::{AsyncClient, ConnectOptionsBuilder, CreateOptionsBuilder, SslOptionsBuilder};
 use std::error::Error;
 
-const QOS_0: i32 = 0;
-const QOS_1: i32 = 1;
-
 pub struct MqttConfig {
     pub server_uri: String,
     pub client_id: String,
