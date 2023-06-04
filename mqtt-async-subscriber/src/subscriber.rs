@@ -15,14 +15,18 @@ pub struct AsyncMqttSubscriber {
 }
 
 impl AsyncMqttSubscriber {
-    pub async fn new(config: MqttConfig) -> Result<Self, Box<dyn Error>> {
+    pub fn new(config: &MqttConfig) -> Result<Self, Box<dyn Error>> {
         let create_opts = CreateOptionsBuilder::new()
-            .server_uri(config.server_uri)
-            .client_id(config.client_id)
+            .server_uri(&config.server_uri)
+            .client_id(&config.client_id)
             .finalize();
 
         let client = AsyncClient::new(create_opts)?;
 
+        Ok(Self { client })
+    }
+
+    pub async fn connect(&mut self, config: MqttConfig) -> Result<(), Box<dyn Error>> {
         let conn_opts = ConnectOptionsBuilder::new()
             .keep_alive_interval(std::time::Duration::from_secs(20))
             .clean_session(true)
@@ -35,11 +39,11 @@ impl AsyncMqttSubscriber {
             )
             .finalize();
 
-        client.connect(conn_opts).await?;
+        self.client.connect(conn_opts).await?;
 
         println!("Connected to broker");
 
-        Ok(Self { client })
+        Ok(())
     }
 
     pub async fn subscribe_to_topics(
@@ -66,6 +70,14 @@ impl AsyncMqttSubscriber {
                 break;
             }
         }
+
+        Ok(())
+    }
+
+    pub async fn disconnect(self) -> Result<(), Box<dyn Error>> {
+        self.client.disconnect(None).await?;
+
+        println!("Disconnected from broker");
 
         Ok(())
     }

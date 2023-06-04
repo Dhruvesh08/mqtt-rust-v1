@@ -1,14 +1,13 @@
 use dotenv::dotenv;
-
-use mqtt_async_publisher::{AsyncMqttPublisher, MqttConfig};
-
-use std::{env, error::Error};
+use mqtt_async_subscriber::{AsyncMqttSubscriber, MqttConfig};
+use std::env;
+use std::error::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenv().map_err(|e| format!("Error loading .env file: {}", e))?;
 
-    let config = MqttConfig {
+    let mqtt_config = MqttConfig {
         server_uri: env::var("MQTT_HOST")?,
         client_id: env::var("CLIENT_ID")?,
         trust_ca: env::var("TRUST_CF")?,
@@ -16,14 +15,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
         password: env::var("MQTT_PASS")?,
     };
 
-    let publisher = AsyncMqttPublisher::new(&config)?;
-    publisher.connect(&config).await?;
+    let mut mqtt_subscriber = AsyncMqttSubscriber::new(&mqtt_config)?;
 
-    let topic = "jack_sparrow/";
-    let message = "Hello, world! form captain jack sparrow";
-    publisher.publish(topic, message).await?;
+    mqtt_subscriber.connect(mqtt_config).await?;
 
-    // publisher.disconnect().await?;
+    let topics = vec!["jack_sparrow", "davy_jones"];
+    let qos_for_topic = vec![1, 0];
+
+    mqtt_subscriber
+        .subscribe_to_topics(&topics, &qos_for_topic)
+        .await?;
+
+    mqtt_subscriber.process_messages().await?;
 
     Ok(())
 }
