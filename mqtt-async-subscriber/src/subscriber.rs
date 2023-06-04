@@ -1,6 +1,7 @@
 use futures_util::StreamExt;
 use paho_mqtt::{AsyncClient, ConnectOptionsBuilder, CreateOptionsBuilder, SslOptionsBuilder};
-use std::error::Error;
+use serde::{Deserialize, Serialize};
+use std::{error::Error, process::Command};
 
 pub struct MqttConfig {
     pub server_uri: String,
@@ -12,6 +13,50 @@ pub struct MqttConfig {
 
 pub struct AsyncMqttSubscriber {
     client: AsyncClient,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct LedResponse {
+    led: String,
+}
+
+fn execute_command(command: &str) -> Result<(), std::io::Error> {
+    let output = Command::new("/bin/sh").arg("-c").arg(command).output()?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "Command '{}' failed with exit code {:?}",
+                command,
+                output.status.code()
+            ),
+        ))
+    }
+}
+
+fn handle_mqtt_response(response: &str) {
+    let led_response: LedResponse = serde_json::from_str(response).unwrap();
+    match led_response.led.as_str() {
+        "default-on" => {
+            // Turn LED on
+            println!("Turning LED on...");
+            execute_command("echo default-on | sudo tee /sys/class/leds/sys_led/trigger").unwrap()
+        }
+        "none" => {
+            // Turn LED off
+            println!("Turning LED off...");
+            execute_command("echo none | sudo tee /sys/class/leds/sys_led/trigger").unwrap()
+        }
+        "heartbeat" => {
+            // Turn LED off
+            println!("Turning LED Blink...");
+            execute_command("echo heartbeat | sudo tee /sys/class/leds/sys_led/trigger").unwrap()
+        }
+        _ => println!("Invalid input!"),
+    }
 }
 
 impl AsyncMqttSubscriber {
@@ -66,6 +111,7 @@ impl AsyncMqttSubscriber {
                     msg.topic(),
                     msg.payload_str()
                 );
+                handle_mqtt_response(&msg.payload_str());
             } else {
                 break;
             }
